@@ -185,7 +185,8 @@ export function drawHud(ctx, game, view) {
   ctx.font = `700 15px ${FONT}`;
   ctx.textAlign = 'right';
   let weaponLine = 'FISTS — click or F to punch';
-  if (player.hasPistol) {
+  if (player.car) weaponLine = 'DRIVING — E to exit · Space handbrake';
+  else if (player.hasPistol) {
     weaponLine = player.reloadTimer > 0 ? 'PISTOL — reloading…' : `PISTOL  ${player.ammoInMag} / ${player.reserveAmmo}`;
   }
   ctx.fillText(weaponLine, view.w - 24, view.h - 92);

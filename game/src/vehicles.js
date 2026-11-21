@@ -43,6 +43,11 @@ export function seedParkedCars(game) {
     spot.taken = true;
     game.cars.push(createCar(random, spot.x, spot.y, spot.angle + random.range(-0.05, 0.05), { driver: 'parked' }));
   }
+  // Two cars always wait on the streets by the safehouse, so a fresh game starts
+  // a short walk from wheels.
+  const home = city.place('safehouse');
+  game.cars.push(createCar(random, home.x - 150, home.y - 60, Math.PI / 2, { driver: 'parked', color: '#5dade2' }));
+  game.cars.push(createCar(random, home.x + 190, home.y - 30, -Math.PI / 2, { driver: 'parked', color: '#f39c4d' }));
   // Parallel parking along a few avenues.
   for (let n = 0; n < 22; n += 1) {
     const vertical = random.chance(0.5);

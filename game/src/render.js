@@ -277,6 +277,27 @@ export function createRenderer(canvas, city) {
   }
 
   function drawPerson(person, isPlayer, time) {
+    if (person.state === 'down') {
+      // Fallen: a still shape on the ground, turned on its side.
+      ctx.save();
+      ctx.translate(person.x, person.y);
+      ctx.rotate(person.angle + Math.PI / 2);
+      ctx.fillStyle = 'rgba(20, 26, 34, 0.25)';
+      ctx.beginPath();
+      ctx.ellipse(1, 3, 15, 7, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = person.pants;
+      ctx.fillRect(-3.4, 2, 7, 13);
+      ctx.fillStyle = person.shirt;
+      roundRect(ctx, -8, -8, 16, 12, 6);
+      ctx.fill();
+      ctx.fillStyle = person.skin;
+      ctx.beginPath();
+      ctx.arc(0, -12, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      return;
+    }
     const bob = person.moving ? Math.sin(time * 13 + person.walkPhase) * 2.2 : 0;
     ctx.fillStyle = 'rgba(20, 26, 34, 0.30)';
     ctx.beginPath();
@@ -446,6 +467,20 @@ export function createRenderer(canvas, city) {
         ctx.fillRect(-6.4, -6.4, 12.8, 12.8);
         ctx.fillStyle = '#ffd94d';
         ctx.fillRect(-4.4, -4.4, 8.8, 8.8);
+        ctx.restore();
+      }
+    }
+    // Dropped cash: green bills waiting to be walked over.
+    if (frame.cashDrops) {
+      for (const drop of frame.cashDrops) {
+        if (!inView(drop.x, drop.y, rect, 30)) continue;
+        ctx.save();
+        ctx.translate(drop.x, drop.y);
+        ctx.rotate(Math.sin(time * 2 + drop.x) * 0.4);
+        ctx.fillStyle = '#3f9e4d';
+        ctx.fillRect(-6, -3.4, 12, 6.8);
+        ctx.fillStyle = '#7fe08a';
+        ctx.fillRect(-4, -2, 8, 4);
         ctx.restore();
       }
     }

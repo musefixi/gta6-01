@@ -17,6 +17,7 @@ export function createPolice() {
     bustedTimer: 0,
     spawnTimer: 0,
     shotsTimer: 0,
+    crimeAt: {},
   };
 }
 
@@ -44,10 +45,16 @@ export function setWanted(game, stars) {
 
 export function reportCrime(game, kind, x, y) {
   const police = game.police;
+  // Collision crimes stream in while two cars grind together; one report a second
+  // is all the heat they should raise.
+  if (kind === 'hitCar' || kind === 'hitCop') {
+    if (game.time - (police.crimeAt[kind] ?? -9) < 1.1) return;
+    police.crimeAt[kind] = game.time;
+  }
   const seen = witnessed(game, x, y);
   switch (kind) {
     case 'theft': addHeat(game, seen ? WANTED.crimeTheftSeen : WANTED.crimeTheftUnseen); break;
-    case 'hitPed': addHeat(game, WANTED.crimeHitPed); break;
+    case 'hitPed': addHeat(game, seen ? WANTED.crimeHitPed : 10); break;
     case 'hitCop': addHeat(game, WANTED.crimeHitCop); break;
     case 'hitCar': if (seen) addHeat(game, WANTED.crimeHitCar); break;
     case 'downPed': addHeat(game, WANTED.crimeDownPed); break;

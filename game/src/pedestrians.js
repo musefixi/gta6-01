@@ -49,7 +49,7 @@ function sidewalkPoint(game, nearX, nearY, spread) {
 }
 
 /** Hurt a pedestrian: knockback, panic, falling, cash. Causes: punch, shot, car, explosion. */
-export function hitPed(game, ped, damage, angle, cause) {
+export function hitPed(game, ped, damage, angle, cause, byCar = null) {
   if (ped.state === 'down' || ped.state === 'gone') return;
   ped.hp -= damage;
   ped.x += Math.cos(angle) * 9;
@@ -58,7 +58,10 @@ export function hitPed(game, ped, damage, angle, cause) {
     ped.state = 'down';
     ped.downTimer = 7;
     game.audio.thud();
-    if (cause === 'car') game.reportCrime(ped.officer ? 'hitCop' : 'hitPed', ped.x, ped.y);
+    // Only the player's own driving is a crime; traffic accidents are not Jax's heat.
+    if (cause === 'car' && byCar && byCar.driver === 'player') {
+      game.reportCrime(ped.officer ? 'hitCop' : 'hitPed', ped.x, ped.y);
+    }
     if (cause === 'shot' || cause === 'punch') game.reportCrime(ped.officer ? 'downCop' : 'downPed', ped.x, ped.y);
     if (!ped.officer && game.random.chance(0.65)) {
       game.cashDrops.push({ x: ped.x, y: ped.y, amount: game.random.int(4, 26), life: 14 });
@@ -116,9 +119,10 @@ export function updatePedestrians(game, dt) {
       }
     }
   }
-  while (walkers < PED_TARGET) {
+  for (let attempt = 0; attempt < 10 && walkers < PED_TARGET; attempt += 1) {
     const spot = sidewalkPoint(game, player.x, player.y, 3);
-    if (Math.hypot(spot.x - player.x, spot.y - player.y) < 480) break;
+    const d = Math.hypot(spot.x - player.x, spot.y - player.y);
+    if (d < 470 || d > 1300) continue;
     const ped = createPed(random, spot.x, spot.y, { hailing: random.chance(0.13) });
     if (ped.hailing) ped.state = 'hail';
     game.peds.push(ped);
@@ -149,11 +153,21 @@ export function updatePedestrians(game, dt) {
     }
     const threat = carThreatens(game, ped);
     if (threat) {
-      hitPed(game, ped, Math.min(64, Math.abs(threat.speed) * 0.24), threat.angle, 'car');
-      threat.speed *= 0.8;
-      game.audio.crash(0.25);
-      game.effects.addShake(2);
-      continue;
+      const dx = ped.x - threat.x;
+      const dy = ped.y - threat.y;
+      const along = dx * Math.cos(threat.angle) + dy * Math.sin(threat.angle);
+      if (along > 26 && ped.state !== 'flee') {
+        // Seen it coming: dive out of the lane rather than be collected by it.
+        ped.state = 'flee';
+        ped.fleeTimer = 1.1;
+        ped.fleeFrom = { x: threat.x, y: threat.y };
+      } else if (along <= 26) {
+        hitPed(game, ped, Math.min(64, Math.abs(threat.speed) * 0.24), threat.angle, 'car', threat);
+        threat.speed *= 0.8;
+        game.audio.crash(0.25);
+        game.effects.addShake(2);
+        continue;
+      }
     }
     if (ped.state === 'hail') {
       ped.moving = false;

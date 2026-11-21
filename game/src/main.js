@@ -59,7 +59,7 @@ function makeGame(save) {
     hasSave: Boolean(save),
     // Cross-module helpers, wired once here so the systems stay decoupled.
     reportCrime(kind, x, y) { reportCrime(game, kind, x, y); },
-    hitPed(ped, damage, angle, cause) { hitPed(game, ped, damage, angle, cause); },
+    hitPed(ped, damage, angle, cause, byCar) { hitPed(game, ped, damage, angle, cause, byCar); },
     hitCar(car, amount, cause) { hitCar(game, car, amount, cause); },
     hurtPlayer(amount) { return hurtPlayer(game, amount); },
     scareNear(x, y, radius) { scareNear(game, x, y, radius); },
@@ -340,6 +340,8 @@ let last = performance.now();
 
 if (shot) {
   const scene = stageShot(shot, game);
+  if (game.hourOverride !== null) game.hour = game.hourOverride;
+  if (scene.objective) game.objective = scene.objective;
   let painted = 0;
   const paint = () => {
     renderer.draw({

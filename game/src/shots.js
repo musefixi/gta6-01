@@ -56,24 +56,26 @@ function stageChase(game) {
   game.player.health = 82;
   game.player.armor = 40;
   const avenueX = roadCenterX(9) + 26;
-  const startY = roadCenterY(4) + 330;
+  const startY = roadCenterY(5) + 260;
   const car = putPlayerInCar(game, avenueX, startY, -Math.PI / 2, '#e74c3c');
-  car.speed = 300;
-  addCop(game, avenueX - 34, startY + 165, -Math.PI / 2).speed = 320;
-  addCop(game, avenueX + 30, startY + 285, -Math.PI / 2).speed = 330;
-  addCop(game, avenueX - 10, startY + 430, -Math.PI / 2).speed = 310;
-  const traffic = createCar(game.random, avenueX, startY - 430, -Math.PI / 2, { driver: 'traffic', color: '#5dade2' });
+  car.speed = 330;
+  addCop(game, avenueX - 30, startY + 175, -Math.PI / 2).speed = 335;
+  addCop(game, avenueX + 26, startY + 305, -Math.PI / 2).speed = 340;
+  addCop(game, avenueX - 6, startY + 445, -Math.PI / 2).speed = 330;
+  // Oncoming traffic in the far lane only — the player's lane stays clear to run.
+  const traffic = createCar(game.random, avenueX - 52, startY - 520, Math.PI / 2, { driver: 'traffic', color: '#5dade2' });
   game.cars.push(traffic);
   setWanted(game, 3);
   const ahead = { x: avenueX, y: roadCenterY(1) };
-  stepWorld(game, 2.6, (dt) => {
-    steerToward(game, car, ahead.x, ahead.y, dt, 430, { avoid: false, accel: 420 });
+  stepWorld(game, 1.7, (dt) => {
+    steerToward(game, car, ahead.x, ahead.y, dt, 445, { avoid: false, accel: 430 });
   });
   car.driver = 'player';
+  car.health = 100;
   game.screen = 'play';
-  game.camera.x = car.x + 30;
-  game.camera.y = car.y + 96;
-  game.camera.zoom = 0.94;
+  game.camera.x = car.x + 14;
+  game.camera.y = car.y + 128;
+  game.camera.zoom = 0.97;
   game.setBanner('Dockside Heat', 'Two stars became three — shake them off!', 99);
   return {
     objective: { x: game.city.place('safehouse').x, y: game.city.place('safehouse').y, label: 'Lose the police — then reach the safehouse' },
@@ -94,7 +96,7 @@ function stageMission(game) {
   game.player.angle = 0.4;
   game.player.aimAngle = 0.4;
   game.player.weaponOut = true;
-  stepWorld(game, 3, null);
+  stepWorld(game, 5, null);
   game.camera.x = game.player.x + 60;
   game.camera.y = game.player.y + 30;
   game.camera.zoom = 1.05;
@@ -112,9 +114,10 @@ function stageNight(game) {
   game.player.health = 96;
   const avenueX = roadCenterX(10) - 26;
   const startY = roadCenterY(2) - 260;
-  const car = putPlayerInCar(game, avenueX, startY, Math.PI / 2, '#f7dc6f');
+  const car = putPlayerInCar(game, avenueX, startY, Math.PI / 2, '#19b3a6');
   car.speed = 260;
-  const taxi = createCar(game.random, avenueX, startY + 300, Math.PI / 2, { driver: 'traffic', kind: 'taxi' });
+  // A taxi in the oncoming lane, passing in the night — never in the player's path.
+  const taxi = createCar(game.random, avenueX + 52, startY + 420, -Math.PI / 2, { driver: 'traffic', kind: 'taxi' });
   game.cars.push(taxi);
   const ahead = { x: avenueX, y: roadCenterY(5) };
   stepWorld(game, 2.2, (dt) => {
